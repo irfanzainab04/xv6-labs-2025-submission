@@ -195,6 +195,18 @@ UPROGS=\
 	$U/_logstress\
 	$U/_forphan\
 	$U/_dorphan\
+	$U/_sleep\
+	$U/_sixfive\
+	$U/_memdump\
+	$U/_find\
+	$U/_uptime\
+	$U/_find.grep\
+
+
+
+
+
+
 
 
 
@@ -279,7 +291,7 @@ ifeq ($(LAB),util)
 endif
 
 
-fs.img: mkfs/mkfs README $(UEXTRA) $(UPROGS)
+fs.img: mkfs/mkfs README sixfive.txt $(UEXTRA) $(UPROGS)
 	mkfs/mkfs fs.img README $(UEXTRA) $(UPROGS)
 
 newfs.img: 
