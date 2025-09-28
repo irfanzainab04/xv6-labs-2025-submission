@@ -497,3 +497,54 @@ nulterminate(struct cmd *cmd)
   }
   return cmd;
 }
+// question 3
+
+int
+main(void)
+{
+  static char buf[100];
+  int fd;
+
+  // Ensure that three file descriptors are open.
+  while((fd = open("console", O_RDWR)) >= 0){
+    if(fd >= 3){
+      close(fd);
+      break;
+    }
+  }
+
+  // Read and run input commands.
+  while(getcmd(buf, sizeof(buf)) >= 0){
+    char *cmd = buf;
+
+    // skip leading spaces/tabs
+    while (*cmd == ' ' || *cmd == '\t')
+      cmd++;
+
+    if (*cmd == '\n') // blank command
+      continue;
+
+    if(cmd[0] == 'c' && cmd[1] == 'd' && cmd[2] == ' '){
+      // Chdir must be called by the parent, not the child.
+      cmd[strlen(cmd)-1] = 0;  // chop \n
+      if(chdir(cmd+3) < 0)
+        fprintf(2, "cannot cd %s\n", cmd+3);
+
+    } else if(strncmp(cmd, "wait", 4) == 0 && (cmd[4] == '\n' || cmd[4] == 0)){
+      // Handle wait as a shell builtin
+      if(wait(0) < 0)
+        fprintf(2, "no child to wait for\n");
+
+    } else {
+      struct cmd *c = parsecmd(cmd);
+      if(fork1() == 0)
+        runcmd(c);
+
+      // Only wait if this is NOT a background command
+      if(c->type != BACK)
+        wait(0);
+    }
+  }
+
+  exit(0);
+}
