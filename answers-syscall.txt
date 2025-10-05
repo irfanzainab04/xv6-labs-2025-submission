@@ -1,0 +1,22 @@
+ANSWER 1 
+⦁	usertrap()
+
+ANSWER 2
+⦁	$2 = 0xf
+⦁	executing open() system call
+
+ANSWER 3
+⦁	$5 = 0X200000022
+⦁	$sstatus = 0x200000022, and (($sstatus >> 8) & 1) = 0, which means the previous mode was user mode.
+⦁	The trap occurred because a user process executed a system call (ecall), causing the CPU to switch into supervisor mode.
+
+ANSWER 4
+⦁	80001cf8: lw a3, 0(zero)
+⦁	The register that corresponds to the variable num is a3.
+
+ANSWER 5
+⦁	load page fault
+
+ANSWER 6
+⦁	name = init
+⦁	pid = 1
