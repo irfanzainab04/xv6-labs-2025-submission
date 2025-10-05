@@ -80,6 +80,7 @@ argstr(int n, char *buf, int max)
 }
 
 // Prototypes for the functions that handle system calls.
+
 extern uint64 sys_fork(void);
 extern uint64 sys_exit(void);
 extern uint64 sys_wait(void);
@@ -101,6 +102,7 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
+extern uint64 sys_interpose(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -126,22 +128,49 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_interpose] sys_interpose,
+
 };
 
 void
 syscall(void)
 {
-  int num;
+ 
+ 
   struct proc *p = myproc();
+  int num = p->trapframe->a7;  // System call number
+  char path_buf[512];
+  int rejected = 0;
 
-  num = p->trapframe->a7;
-  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    // Use num to lookup the system call function for num, call it,
-    // and store its return value in p->trapframe->a0
+  // 1) Restriction check via interpose mask
+  if (p->interpose_mask & (1 << num)) {
+    rejected = 1;  // masked by default
+
+    // Path-exception logic for open/exec
+    if (num == SYS_open || num == SYS_exec) {
+      // pathname is the 0th argument for both open and exec in this setup
+      if (argstr(0, path_buf, sizeof(path_buf)) >= 0) {
+        // allow if (a) path matches allowed_path AND (b) allowed_path is not "-"
+        if (strncmp(path_buf, p->allowed_path, sizeof(path_buf)) == 0 &&
+            strncmp(p->allowed_path, "-", 2) != 0) {
+          rejected = 0; // allow this syscall
+        }
+      }
+      // if argstr failed or path didn't match, rejected stays 1
+    }
+  }
+
+  // 2) If rejected, set return value to -1 and return
+  if (rejected) {
+    p->trapframe->a0 = -1;
+    return;
+  }
+
+  // 3) Normal syscall dispatch
+  if (num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     p->trapframe->a0 = syscalls[num]();
   } else {
-    printf("%d %s: unknown sys call %d\n",
-            p->pid, p->name, num);
+    printf("%d %s: unknown sys call %d\n", p->pid, p->name, num);
     p->trapframe->a0 = -1;
   }
 }

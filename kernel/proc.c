@@ -272,7 +272,10 @@ kfork(void)
     return -1;
   }
   np->sz = p->sz;
-
+   // Copy interpose mask from parent to child.
+  np->interpose_mask = p->interpose_mask;
+ // Copy the allowed path to the child safely (xv6 strncpy).
+  strncpy(np->allowed_path, p->allowed_path, sizeof(np->allowed_path));
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
 
