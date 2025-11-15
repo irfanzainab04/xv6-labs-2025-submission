@@ -1,0 +1,17 @@
+//1a
+13 is stored in a2. a0, a1, a2 holds the function arguments
+
+//1b
+ I believe that f and g are inline functions as I cant find them
+ in the assembly code and the function for line 26 is working.
+That means that function f is being run but not called
+
+//1c
+Printf address is 00000000000006f6
+
+//1d
+ra would contain 0x34
+
+//1e
+Output would be He110 World Q1f Random/garbage value will be printed
+ as there was only 1 argument and in printf we asked for 2.
